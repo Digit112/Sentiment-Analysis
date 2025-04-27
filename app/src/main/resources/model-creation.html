@@ -1,0 +1,143 @@
+<label for="model-name">Name:</label>
+<input id="model-name" type="text">
+<br>
+
+<p>Select a dataset to use for training:</p>
+<div id="datasets-list"></div>
+
+<p id="selected-model" style="display: none;"></p>
+
+<hr>
+
+<label for="num-lines">Number of Lines:</label>
+<input id="num-lines" type="number" min="1000" step="1000" required>
+<br>
+
+<label for="min-token-occurence">Minimum Token Occurence:</label>
+<input id="min-token-occurence" type="number" min="0" step="10" required>
+<br>
+
+<button id="create-model-button" type="button">Create Model</button>
+<br>
+
+<p id="model-progress" style="display: none;"></p>
+
+<label for="cross-validation-k">Cross Validation K:</label>
+<input id="cross-validation-k" type="number" min="1" max="10">
+<br>
+
+<button id="cross-validate-button" type="button">Cross-Validate</button>
+
+<p>
+	Number of Lines is the number of labeled lines to use from the selected training data for training a model or cross-validating.
+	If the amount entered is greater than the number of lines available, training will end early.
+</p>
+
+<p>
+	Minimum Token Occurence is the smallest number of times a word or word sequence must appear
+	in the training data before it is included in the dictionary. This must be at least 0.02% of the number of lines. If it isn't, the value will be raised silently.
+</p>
+<p>
+	Cross-Validation K is the number of subgroups to divide the training data into.
+	For each group, a model will be trained on all the other groups and tested on the group that was left out.
+	The combined test results provide an effective measure of the model's accuracy.
+</p>
+
+<script>
+	let current_dataset = ""
+	let training_model_name = ""
+	let selected_model = document.getElementById("selected-model")
+	
+	fetch("/api/datasets", {method: "GET"})
+	.then(response => response.json())
+	.then(data => {
+		let dataset_list = document.getElementById("datasets-list")
+		
+		for (let i = 0; i < data.length; i++) {
+			let dataset = data[i]
+			
+			let dataset_container = document.createElement("div")
+			dataset_container.style.display = "flex"
+			
+			let dataset_name = document.createElement("p")
+			dataset_name.textContent = dataset["name"] + "; " + dataset["num_lines"] + " lines."
+			dataset_name.style.flex = 1
+			
+			let dataset_select = document.createElement("button")
+			dataset_select.type = "button"
+			dataset_select.style.flex = 1
+			dataset_select.textContent = "Select"
+			
+			dataset_container.appendChild(dataset_name)
+			dataset_container.appendChild(dataset_select)
+			
+			dataset_list.appendChild(dataset_container)
+			
+			dataset_select.addEventListener("click", () => {
+				current_dataset = dataset["name"]
+				
+				selected_model.style.display = "block"
+				selected_model.textContent = "Using dataset '" + current_dataset + "'..."
+			})
+		}
+	})
+	
+	let create_model_button = document.getElementById("create-model-button")
+	let cross_validate_button = document.getElementById("cross-validate-button")
+	let num_lines = document.getElementById("num-lines")
+	let model_progress = document.getElementById("model-progress")
+	
+	let min_token_occurence = document.getElementById("min-token-occurence")
+	let model_name = document.getElementById("model-name")
+	
+	create_model_button.addEventListener("click", () => {
+		training_model_name = model_name.value
+		fetch("/api/models", {
+			method: "POST",
+			headers: {
+				"Content-Type": "text/plain; charset=UTF-8"
+			},
+			body: training_model_name + "/" + current_dataset + "/" + min_token_occurence.value + "/" + num_lines.value
+		})
+		
+		model_progress.style.display = "block"
+		model_progress.textContent = "Initializaing Model..."
+		setTimeout(updateModelStatus, 500)
+	})
+	
+	function updateModelStatus() {
+		fetch("/api/model-progress?model-name=" + training_model_name, {
+			method: "GET"
+		})
+		.then(response => {
+			if (response.status == 200)  {
+				response.json().then(data => {
+					if (data["stage"] == "initialization") {
+						model_progress.textContent = "Initializaing Model..."
+					}
+					else if (data["stage"] == "words") {
+						model_progress.textContent = "Constructing Word Dictionary (" + Math.floor(data["progress"]*100) + "%)..."
+					}
+					else if (data["stage"] == "phrases") {
+						model_progress.textContent = "Constructing Phrase Dictionary (" + Math.floor(data["progress"]*100) + "%)..."
+					}
+					else if (data["stage"] == "renormalizing") {
+						model_progress.textContent = "Renormalizing Outputs..."
+					}
+					else if (data["stage"] == "complete") {
+						model_progress.textContent = "Model Complete."
+					}
+						
+					// Schedule next update
+					if (data["stage"] != "complete") {
+						setTimeout(updateModelStatus, 500);
+					}
+				})
+			}
+		})
+	}
+	
+	cross_validate_button.addEventListener("click", () => {
+		
+	})
+</script>

@@ -1,0 +1,58 @@
+<p>Please authenticate to continue.</p>
+<form>
+	<label for="username">Username:</label>
+	<input id="username" type="text">
+	
+	<label for="password">Password:</label>
+	<input id="password" type="password">
+	
+	<br>
+	
+	<button id="login" type="button">Log In</button>
+	
+	<p id="error-text" style="display: none;">Invalid Username or Password.</p>
+</form>
+
+<script>
+	function getCookie(name) {
+		var dc = document.cookie;
+		var prefix = name + "=";
+		var begin = dc.indexOf("; " + prefix);
+		if (begin == -1) {
+			begin = dc.indexOf(prefix);
+			if (begin != 0) return null;
+		}
+		else {
+			begin += 2;
+			var end = document.cookie.indexOf(";", begin);
+			if (end == -1) {
+				end = dc.length;
+			}
+		}
+		return decodeURI(dc.substring(begin + prefix.length, end));
+	} 
+	
+	function login_callback() {
+		const username = document.getElementById("username").value
+		const password = document.getElementById("password").value
+		
+		fetch("/api/authenticate" + location.search, {
+			method: "POST",
+			credentials: "same-origin",
+			headers: {
+				"Content-Type": "text/plain; charset=UTF-8",
+				"Authorization": username + "/" + password
+			}
+		}).then(response => {
+			location.href = response.headers.get("location")
+		});
+	}
+	
+	document.getElementById("login").addEventListener("click", login_callback)
+	
+	const url_params = new URLSearchParams(location.search);
+	const did_error = url_params.get("error");
+	if (did_error != null) {
+		document.getElementById("error-text").style.display = "block"
+	}
+</script>

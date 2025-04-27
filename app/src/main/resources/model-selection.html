@@ -1,0 +1,63 @@
+<h1>Model Selection</h1>
+
+<div id="model-list"></div>
+
+<script>
+	fetch("/api/models", {method: "GET"})
+	.then(response => response.json())
+	.then(data => {
+		let model_list = document.getElementById("model-list")
+		
+		for (let i = 0; i < data.length; i++) {
+			let model = data[i]
+			
+			let model_container = document.createElement("div")
+			model_container.style.display = "flex"
+			
+			let model_label = document.createElement("p")
+			model_label.textContent = model["name"]
+			model_label.style.flex = 1
+			
+			let model_select = document.createElement("button")
+			model_select.type = "button"
+			model_select.style.flex = 1
+			model_select.textContent = "Select"
+			
+			let model_delete = document.createElement("button")
+			model_delete.type = "button"
+			model_delete.style.flex = 1
+			model_delete.textContent = "Delete"
+			
+			model_container.appendChild(model_label)
+			model_container.appendChild(model_select)
+			model_container.appendChild(model_delete)
+			
+			model_list.appendChild(model_container)
+			
+			model_select.addEventListener("click", () => {
+				document.cookie = "current-model=" + model["name"]
+			})
+			
+			model_delete.addEventListener("click", () => {
+				did_confirm = confirm("Are you sure you want to delete '" + model["name"] + "'? This action cannot be undone.")
+				if (did_confirm) {
+					// If deleting the selected model, deselect it.
+					if (getCookie("current-model") == model["name"]) {
+						document.cookie = "current-model=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+					}
+					
+					fetch("/api/models", {
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json; charset=UTF-8"
+						},
+						"body": model["name"]
+					})
+					.then(response => {
+						location.reload()
+					})
+				}
+			})
+		}
+	})
+</script>

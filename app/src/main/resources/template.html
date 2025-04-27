@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<script>
+		function getCookie(name) {
+			const cookieString = document.cookie;
+			const cookies = cookieString.split(';');
+
+			for (let i = 0; i < cookies.length; i++) {
+				let cookie = cookies[i].trim();
+				if (cookie.startsWith(name + '=')) {
+					return cookie.substring(name.length + 1);
+				}
+			}
+			return null;
+		}
+	</script>
+	<head>
+		<title>Sentiment Analysis</title>
+		
+		<link rel="stylesheet" href="/css">
+	</head>
+	<body>
+		<header>
+			<a href="/"><h1>Sentiment Analysis</h1></a>
+		</header>
+		
+		<div  class="page-content">
+			<div class="nav"><nav>
+				<ul>
+					<li><a href="/">Homepage</a></li>
+					<li><a href="/model-selection">Model Selection</a></li>
+					<li><a href="/model-creation">Model Creation</a></li>
+					<li><a href="/data-labeling">Data Labeling</a></li>
+				</ul>
+			</nav></div>
+			
+			<div class="article"><article>
+				%%content%%
+			</article></div>
+		</div>
+	</body>
+</html>

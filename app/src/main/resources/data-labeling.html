@@ -1,0 +1,149 @@
+<p id="model-identifier">Not using a model. Select a model from <a href="/model-selection">Model Selection</a> or, if none exists, create one from <a href="/model-creation">Model Creation</a></p>
+
+<div>
+	<p>Label an Individual Sentence:</p>
+	<input id="one-off-label" type="text" style="width: 80%;">
+	<button id="one-off-label-submit" type="button">Submit</button>
+	<p id="single-label" style="display: none;"></p>
+</div>
+
+<div>
+	<p>Bulk Data Labeling:</p>
+	<input id="bulk-label" type="file">
+	<button id="bulk-label-submit" type="button">Submit</button>
+</div>
+
+<div id="stats-table" style="display: none;">
+	<h1>Statistics</h1>
+	<table>
+		<tr>
+			<th>Average</th>
+			<th>Minimum</th>
+			<th>Q1</th>
+			<th>Median</th>
+			<th>Q3</th>
+			<th>Maximum</th>
+		</tr>
+		<tr>
+			<td id="avg-label"></td>
+			<td id="min-label"></td>
+			<td id="qt1-label"></td>
+			<td id="med-label"></td>
+			<td id="qt2-label"></td>
+			<td id="max-label"></td>
+		</tr>
+	</table>
+</div>
+
+<div id="results-list" style="display: none;">
+	<h1>Most Positive Statements:</h1>
+	<div id="pos-examples"></div>
+	
+	<h1>Most Negative Statements</h1>
+	<div id="neg-examples"></div>
+</div>
+
+<p>
+	The uploaded file should consist of any number of statements, each on its own line.
+</p>
+
+<script>
+	let one_off_label_submit = document.getElementById("one-off-label-submit")
+	let bulk_label_submit = document.getElementById("bulk-label-submit")
+	
+	let one_off_label = document.getElementById("one-off-label")
+	let bulk_label = document.getElementById("bulk-label")
+	
+	let stats_table = document.getElementById("stats-table")
+	let single_label = document.getElementById("single-label")
+	
+	let avg_label = document.getElementById("avg-label")
+	let min_label = document.getElementById("min-label")
+	let qt1_label = document.getElementById("qt1-label")
+	let med_label = document.getElementById("med-label")
+	let qt2_label = document.getElementById("qt2-label")
+	let max_label = document.getElementById("max-label")
+	
+	let results_list = document.getElementById("results-list")
+	let pos_examples = document.getElementById("pos-examples")
+	let neg_examples = document.getElementById("neg-examples")
+	
+	let model_identifier = document.getElementById("model-identifier")
+	
+	let model_name = getCookie("current-model")
+	console.log(model_name)
+	if (model_name != null) {
+		model_identifier.textContent = "Using model '" + model_name + "'"
+	}
+	
+	one_off_label_submit.addEventListener("click", () => {
+		fetch("/api/labels/", {
+			method: "POST",
+			credentials: "include",
+			headers: {
+				"Content-Type": "text/plain; charset=UTF-8"
+			},
+			body: one_off_label.value
+		})
+		.then(response => {
+			if (response.status == 200) return response.json()
+		})
+		.then(data => {
+			single_label.style.display = "block"
+			single_label.textContent = data["pos-examples"][0]["label"]
+		});
+	})
+	
+	bulk_label_submit.addEventListener("click", () => {
+		const file = bulk_label.files[0];
+		if (!file) return
+		
+		const formData = new FormData();
+		formData.append('file', file);
+		
+		fetch("/api/labels/", {
+			method: "POST",
+			credentials: "include",
+			body: formData
+		})
+		.then(response => {
+			if (response.status == 200) return response.json()
+		})
+		.then(parseLabels);
+	})
+	
+	function parseLabels(data) {
+		console.log(data)
+		
+		results_list.style.display = "block"
+		stats_table.style.display = "block"
+		
+		// Assign statistical labels.
+		avg_label.textContent = data["stats"]["mean"]
+		min_label.textContent = data["stats"]["min"]
+		qt1_label.textContent = data["stats"]["qt1"]
+		med_label.textContent = data["stats"]["med"]
+		qt2_label.textContent = data["stats"]["qt3"]
+		max_label.textContent = data["stats"]["max"]
+		
+		// Clear and replace example text.
+		pos_examples.textContent = ""
+		neg_examples.textContent = ""
+		
+		for (let i = 0; i < 5; i++) {
+			if (data["pos-examples"][i]["statement"] == "null") break
+			
+			let result = document.createElement("p")
+			result.textContent = data["pos-examples"][i]["label"] + ": " + data["pos-examples"][i]["statement"]
+			pos_examples.appendChild(result)
+		}
+		
+		for (let i = 0; i < 5; i++) {
+			if (data["neg-examples"][i]["statement"] == "null") break
+			
+			let result = document.createElement("p")
+			result.textContent = data["neg-examples"][i]["label"] + ": " + data["neg-examples"][i]["statement"]
+			neg_examples.appendChild(result)
+		}
+	}
+</script>
