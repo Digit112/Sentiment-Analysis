@@ -509,6 +509,7 @@ public class App {
 		
 		// Should be impossible at this point.
 		if (model == null) {
+			System.out.println("No model.");
 			response.setStatus(400);
 			return;
 		}
@@ -524,12 +525,14 @@ public class App {
 			// Get the formdata boundary
 			int boundary_start = content_type.indexOf("boundary");
 			if (boundary_start == -1) {
+				System.out.println("No boundary start.");
 				response.setStatus(400);
 				return;
 			}
 			
 			boundary_start = content_type.indexOf("=", boundary_start+8) + 1;
 			if (boundary_start == -1) {
+				System.out.println("No boundary start (2).");
 				response.setStatus(400);
 				return;
 			}
@@ -550,6 +553,7 @@ public class App {
 				// Split header and body.
 				int header_end = form_component.indexOf("\r\n\r\n");
 				if (header_end == -1) {
+					System.out.println("No header end.");
 					response.setStatus(400);
 					return;
 				}
@@ -560,12 +564,14 @@ public class App {
 				// Get name param;
 				int name_start = header.indexOf("name");
 				if (name_start == -1) {
+					System.out.println("No name start.");
 					response.setStatus(400);
 					return;
 				}
 				
 				name_start = header.indexOf("\"", name_start+4) + 1;
 				if (name_start == -1) {
+					System.out.println("No name start (2).");
 					response.setStatus(400);
 					return;
 				}
@@ -582,11 +588,13 @@ public class App {
 			}
 		}
 		else {
+			System.out.println("Invalid content-type");
 			response.setStatus(400);
 			return;
 		}
 		
 		if (statements == null) {
+			System.out.println("No statements.");
 			response.setStatus(400);
 			return;
 		}
