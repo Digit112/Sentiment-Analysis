@@ -382,6 +382,8 @@ public class App {
 		int min_token_occurence = Integer.parseInt(inputs[2]);
 		int num_lines = Integer.parseInt(inputs[3]);
 		
+		min_token_occurence = Math.max(min_token_occurence, num_lines / 5000);
+		
 		// Check parameter validity
 		if (min_token_occurence < 0 || num_lines < 1) {
 			response.setStatus(400);
@@ -481,6 +483,7 @@ public class App {
 	public void get_labels(Response response) throws IOException {
 		String content_type = response.getRequest().getHeader("Content-Type");
 		if (content_type == null) {
+			System.out.println("No Content-Type");
 			response.setStatus(400);
 			return;
 		}
@@ -488,6 +491,7 @@ public class App {
 		// Acquire model for labeling.
 		String model_name = response.getRequest().getCookie("current-model");
 		if (model_name == null) {
+			System.out.println("No model selected.");
 			response.setStatus(400);
 			return;
 		}

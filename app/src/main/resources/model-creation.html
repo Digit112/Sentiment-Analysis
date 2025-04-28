@@ -4,29 +4,27 @@
 
 <p>Select a dataset to use for training:</p>
 <div id="datasets-list"></div>
+<p id="no-datasets" style="display: none;">
+No datasets available. Ensure all .ekdt files have the appropriate extension and are placed in the <code>/app/labeled-data</code> folder.
+A properly formatted, zipped dataset of yelp reviews is linked in the README. 
+</p> 
 
 <p id="selected-model" style="display: none;"></p>
 
 <hr>
 
 <label for="num-lines">Number of Lines:</label>
-<input id="num-lines" type="number" min="1000" step="1000" required>
+<input id="num-lines" type="number" min="1000" step="1000" value="200000">
 <br>
 
 <label for="min-token-occurence">Minimum Token Occurence:</label>
-<input id="min-token-occurence" type="number" min="0" step="10" required>
+<input id="min-token-occurence" type="number" min="0" step="10" value="120">
 <br>
 
 <button id="create-model-button" type="button">Create Model</button>
 <br>
 
 <p id="model-progress" style="display: none;"></p>
-
-<label for="cross-validation-k">Cross Validation K:</label>
-<input id="cross-validation-k" type="number" min="1" max="10">
-<br>
-
-<button id="cross-validate-button" type="button">Cross-Validate</button>
 
 <p>
 	Number of Lines is the number of labeled lines to use from the selected training data for training a model or cross-validating.
@@ -36,11 +34,6 @@
 <p>
 	Minimum Token Occurence is the smallest number of times a word or word sequence must appear
 	in the training data before it is included in the dictionary. This must be at least 0.02% of the number of lines. If it isn't, the value will be raised silently.
-</p>
-<p>
-	Cross-Validation K is the number of subgroups to divide the training data into.
-	For each group, a model will be trained on all the other groups and tested on the group that was left out.
-	The combined test results provide an effective measure of the model's accuracy.
 </p>
 
 <script>
@@ -52,6 +45,9 @@
 	.then(response => response.json())
 	.then(data => {
 		let dataset_list = document.getElementById("datasets-list")
+		if (data.length == 0) {
+			document.getElementById("no-datasets").style.display = "block"
+		}
 		
 		for (let i = 0; i < data.length; i++) {
 			let dataset = data[i]
@@ -136,8 +132,4 @@
 			}
 		})
 	}
-	
-	cross_validate_button.addEventListener("click", () => {
-		
-	})
 </script>

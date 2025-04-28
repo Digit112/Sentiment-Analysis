@@ -1,5 +1,7 @@
 <h1>Model Selection</h1>
 
+<p id="no-models" style="display: none;">No models available. Go to <a href="/model-creation">Model Creation</a> to create a model.</p>
+
 <div id="model-list"></div>
 
 <script>
@@ -7,6 +9,10 @@
 	.then(response => response.json())
 	.then(data => {
 		let model_list = document.getElementById("model-list")
+		
+		if (data.length == 0) {
+			document.getElementById("no-models").style.display = "block"
+		}
 		
 		for (let i = 0; i < data.length; i++) {
 			let model = data[i]
