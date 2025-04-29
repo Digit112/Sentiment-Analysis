@@ -41,6 +41,9 @@ public class Model {
 	private final int sequence_pruning_interval;
 	private final int num_output_renormalization_samples;
 	
+	private final static double POLARITY_BIAS_EXP = 1;
+	private final static double DEVIATION_BIAS_EXP = 3;
+	
 	private enum Stage {
 		INIT, WORDS, PHRASES, RENORMALIZING, COMPLETE
 	};
@@ -550,7 +553,9 @@ public class Model {
 				}
 				
 				double token_score = getNormalizedMeanScore(current_sequence);
-				double weight = Math.abs(token_score) / Math.sqrt(Math.pow(current_sequence.getScoreStdDev(), 2) + 0.02); // Approximates reciprical w/o allowing for division by zero.
+				double weight = 
+					Math.pow(Math.abs(token_score), POLARITY_BIAS_EXP) /
+					Math.pow(Math.sqrt(Math.pow(current_sequence.getScoreStdDev(), 2) + 0.02), DEVIATION_BIAS_EXP); // Approximates reciprical w/o allowing for division by zero.
 //				System.out.println(current_sequence.getString() + ": " + token_score + " (<- " + current_sequence.getScoreMean() + ") * " + weight);
 				
 				assert token_score >= -1 && token_score <= 1 : token_score + " is not in the range -1.0 - 1.0";

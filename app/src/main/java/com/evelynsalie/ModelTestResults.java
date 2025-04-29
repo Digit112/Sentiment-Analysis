@@ -97,6 +97,8 @@ public class ModelTestResults {
 		
 		int total_positive = num_true_positive_labels + num_false_positive_labels;
 		int total_negative = num_true_negative_labels + num_false_negative_labels;
+		int total_non_neutral = total_positive + total_negative;
+		int total_correct = num_true_positive_labels + num_true_negative_labels;
 		
 		ret += String.format("Correctly Labelled Positive: %d / %d (%.2f%%)\n",
 			num_true_positive_labels, total_positive, (double) num_true_positive_labels / total_positive * 100
@@ -106,6 +108,9 @@ public class ModelTestResults {
 			num_true_negative_labels, total_negative, (double) num_true_negative_labels / total_negative * 100
 		);
 		
+		ret += String.format("Correctly Labelled Polarized: %d / %d (%.2f%%)\n",
+			total_correct, total_non_neutral, (double) total_correct / total_non_neutral * 100
+		);
 		return ret;
 	}
 }
